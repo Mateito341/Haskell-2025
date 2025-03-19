@@ -22,3 +22,19 @@ mezcla (Color r1 g1 b1) (Color r2 g2 b2) =
     Color (div (r1 + r2) 2)
           (div (g1 + g2) 2)
           (div (b1 + b2) 2)
+
+
+--EJERCICIO 2
+type Cadena = [Char]
+type Linea = (Cadena, Cadena)
+
+insertar c (ls, rs) = (c:ls,rs)
+
+moverIzq ("" , rs) = ("" , rs)
+moverIzq (c:ls, rs) = (ls ,c:rs)
+moverDer (ls , []) = (ls ,[] )  git config --global user.email "you@example.com"
+
+moverDer (ls ,c:rs) = (c:ls, rs)
+
+moverIni (ls , rs) = ([], rev ls [] ++rs)
+moverFin (ls , rs) = (rev rs []++ls ,[])
