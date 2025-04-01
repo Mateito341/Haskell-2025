@@ -32,9 +32,20 @@ insertar c (ls, rs) = (c:ls,rs)
 
 moverIzq ("" , rs) = ("" , rs)
 moverIzq (c:ls, rs) = (ls ,c:rs)
-moverDer (ls , []) = (ls ,[] )  git config --global user.email "you@example.com"
+moverDer (ls , []) = (ls ,[] )
 
 moverDer (ls ,c:rs) = (c:ls, rs)
 
 moverIni (ls , rs) = ([], rev ls [] ++rs)
 moverFin (ls , rs) = (rev rs []++ls ,[])
+
+--EJERCICIO 5
+
+data Clist = EmptyCl | CUnit a | Consnoc a (Clist a) a
+
+headCL (CUnit x) = x
+headCL (Consnoc x xs y) = x
+
+tailCL (Cunit x) = EmptyCl
+tailCL (Consnoc x EmptyCl y) = Cunit y
+tailCL (consnoc x xs y) = consnoc (headCl x) (tail xs) y
