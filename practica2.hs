@@ -158,3 +158,21 @@ completo x n = let subarbol = completo x (n-1)
                in Nodo subarbol x subarbol
 
 -- EJERCICIO 7
+
+member :: Ord a => a -> Bin a -> Bool
+member a Hoja = False
+member a (Nodo l b r ) 
+  | a == b = True
+  | a < b = member a l
+  | a > b = member a r
+
+
+memberOpt :: Ord a => a -> Bin a -> Bool
+memberOpt x arbol = memberAux x arbol
+  where
+    memberAux :: Ord a => a -> Bin a -> Bool
+    memberAux _ Hoja = False
+    memberAux x (Nodo l b r) = case compare x b of
+      EQ -> True      -- x == b
+      LT -> memberAux x l  -- x < b
+      GT -> memberAux x r  -- x > b
