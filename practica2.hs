@@ -176,3 +176,46 @@ memberOpt x arbol = memberAux x arbol
       EQ -> True      -- x == b
       LT -> memberAux x l  -- x < b
       GT -> memberAux x r  -- x > b
+
+-- EJERCICO 8
+
+data Color = R | b
+data RBT a = E | T Color (RBT a) a (RBT a)
+
+balance :: Color → RBT a → a → RBT a → RBT a
+balance B (T R (T R a x b) y c) z d = T R (T B a x b) y (T B c z d)
+balance B (T R a x (T R b y c)) z d = T R (T B a x b) y (T B c z d)
+balance B a x (T R (T R b y c) z d) = T R (T B a x b) y (T B c z d)
+balance B a x (T R b y (T R c z d)) = T R (T B a x b) y (T B c z d)
+balance c l a r = T c l a r
+
+insert :: Ord a => a -> RBT a -> RBT a
+insert x t = makeBlack (ins x t)
+  where
+    ins x E = T R E x E
+    ins x (T c l y r)
+      | x < y     = balance c (ins x l) y r
+      | x > y     = balance c l y (ins x r)
+      | otherwise = T c l y r
+
+makeBlack :: RBT a -> RBT a
+makeBlack E           = E
+makeBlack (T _ l x r) = T B l x r
+
+fromOrdList :: [a] -> RBT a
+fromOrdList xs = go xs E -- lista arbol 
+  where
+    go [] t = t 
+    go (x:xs) t n = go xs (insert x t)
+  
+fromOrdList' :: [a] -> RBT a
+fromOrdList' xs = makeBlack root
+  where
+    (root, _) = build (length xs) xs
+
+    build 0 xs = (E, xs)
+    build n xs =
+      let (leftSize, rightSize) = (n `div` 2, n - n `div` 2 - 1)
+          (leftTree, x:xs1) = build leftSize xs
+          (rightTree, xs2) = build rightSize xs1
+      in (T R leftTree x rightTree, xs2)
