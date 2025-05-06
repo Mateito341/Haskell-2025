@@ -1,5 +1,5 @@
 -- EJERCICIO 1
-{-
+
 -- Definición del tipo RGB como una tupla
 type RGB = (Int, Int, Int)
 
@@ -36,7 +36,7 @@ moverDer :: Linea -> Linea
 moverDer (Linea p c) = if c < length p then Linea p (c + 1) else Linea p c
 
 moverIzq :: Linea -> Linea
-moverIzq (Linea p c) = if c > 0 then Linea p (c-1) else Linea p c
+moverIzq (Linea p c) = if c > 0 then Linea p (c - 1) else Linea p c
 
 moverIni :: Linea -> Linea
 moverIni (Linea p c) = Linea p 0
@@ -62,8 +62,9 @@ headCL (CUnit x) = x
 headCL (Consnoc x _ _) = x
 
 tailCL :: CList a -> CList a
-tailCL (CUnit _) = EmptyCL
-tailCL (Consnoc _ xs _) = xs
+tailCL (CUnit x) = EmptyCL
+tailCL (Consnoc x EmptyCL y) = CUnit y
+tailCL (Consnoc x xs y) = Consnoc (headCL xs) (tailCL xs) y
 
 lastCL :: CList a -> a
 lastCL (CUnit x) = x
@@ -86,14 +87,19 @@ isCUnitCL _ = False
 reverseCl :: CList a -> CList a
 reverseCl EmptyCL = EmptyCL
 reverseCl (CUnit x) = CUnit x
-reverseCl Consnoc x xs y = Consnoc y (reverseCl xs) x
+reverseCl (Consnoc x xs y) = Consnoc y (reverseCl xs) x
 
 --c)
 -- Función para construir una CList a partir de un elemento y otra CList
-consCL :: a -> CList a -> CList a
-consCL x EmptyCL = CUnit x
-consCL x (CUnit y) = Consnoc x EmptyCL y
-consCL x (Consnoc y ys z) = Consnoc x (consCL y ys) z
+cons :: a -> CList a -> CList a
+cons e EmptyCL = CUnit e 
+cons e (CUnit x) = Consnoc e EmptyCL x
+cons e (Consnoc x xs y) = Consnoc e (cons x xs) y
+
+borrarUCL :: CList a -> CList a
+borrarUCL EmptyCL = EmptyCL
+borrarUCL (CUnit x) = EmptyCL
+borrarUCL (Consnoc x xs z) = cons x xs
 
 -- Función para añadir un elemento al final de una CList
 snocCL :: CList a -> a -> CList a
@@ -106,18 +112,15 @@ initsCL EmptyCL = CUnit EmptyCL
 initsCL xs = snocCL (initsCL (initCL xs)) xs
 
 --d)
-lastsCL :: CList a -> CList (CList a)
-lastsCL EmptyCL = CUnit EmptyCL
-lastsCL xs = consCL xs (lastsCL (tailCL xs))
+
+initsCL :: CList a -> CList (CList a)
+initsCL EmptyCL = CUnit EmptyCL
+initsCL xs = snoc (initsCL (borrarUCL xs)) xs
 
 --e)
-
-concatCL :: CList (CList a) -> CList a 
-concatCL EmptyCL = EmptyCL
-concatCL (CUnit a) = CUnit a 
-concatCL (Consnoc x xs y) = x (concatCL xs) y --mal
--}
-
+lastsCL :: CList a -> CList (CList a)
+lastsCL EmptyCL = CUnit EmptyCL
+lastsCL xs = snoc (lastsCL (tailCL xs)) xs
 
 -- EJERCICIO 4
 
@@ -127,6 +130,23 @@ eval :: Aexp -> Int
 eval (Num x) = x
 eval (Prod a b) = eval a * eval b
 eval (Div a b) = eval a `div` eval b
+
+seval :: Aexp -> Maybe Int
+seval (Num x) = Just x
+seval (Prod a b) =
+  case seval a of
+    Nothing -> Nothing
+    Just x -> case seval b of
+                Nothing -> Nothing
+                Just y -> Just (x * y)
+seval (Div a b) =
+  case seval a of
+    Nothing -> Nothing
+    Just x -> case seval b of
+                Nothing -> Nothing
+                Just 0 -> Nothing
+                Just y -> Just (x `div` y)
+
 
 -- EJERCICIO 5
 
@@ -179,7 +199,7 @@ memberOpt x arbol = memberAux x arbol
 
 -- EJERCICO 8
 
-data Color = R | b
+data Color = R | B
 data RBT a = E | T Color (RBT a) a (RBT a)
 
 balance :: Color → RBT a → a → RBT a → RBT a
@@ -202,23 +222,26 @@ makeBlack :: RBT a -> RBT a
 makeBlack E           = E
 makeBlack (T _ l x r) = T B l x r
 
-fromOrdList :: [a] -> RBT a
-fromOrdList xs = go xs E -- lista arbol 
+ffromOrdList :: [a] -> RBT a
+ffromOrdList xs = go xs E -- lista arbol 
   where
     go [] t = t 
     go (x:xs) t n = go xs (insert x t)
   
-fromOrdList' :: [a] -> RBT a
-fromOrdList' xs = makeBlack root
-  where
-    (root, _) = build (length xs) xs
+data Color = R | B deriving(Show, Eq)
+data RBT a = E | T Color (RBT a) a (RBT a) deriving(Show)
 
-    build 0 xs = (E, xs)
-    build n xs =
-      let (leftSize, rightSize) = (n `div` 2, n - n `div` 2 - 1)
-          (leftTree, x:xs1) = build leftSize xs
-          (rightTree, xs2) = build rightSize xs1
-      in (T R leftTree x rightTree, xs2)
+fromOrdList' :: Ord a => [a] -> Color -> RBT a 
+fromOrdList' [] _ = E 
+fromOrdList' xs c = let m    = div (length xs) 2 
+                        x    = xs !! m -- x es el elemento ed la mitad de la lista
+                        ant  = take m xs
+                        post = drop (m+1) xs
+                        c'   = if c == R then B else R -- garantiza que se alterne entre negro y rojo
+                        in T c (fromOrdList' ant c') x (fromOrdList' post c')
+
+fromOrdList :: Ord a => [a] -> RBT a
+fromOrdList xs = fromOrdList' xs B
 
 --EJERCICIO 9
 -- balancea si el problema está en el subárbol izquierdo
@@ -264,5 +287,12 @@ makeH :: a -> Heap a -> Heap a -> Heap a
 makeH x a b = if rank a > rank b then N (rank b + 1) x a b
 else N (rank a + 1) x b a
 
- fromList :: [a] -> Heap a
- fromList [] = E
+fromList :: [a] -> Heap a 
+fromList xs = 
+  let ys = map (\x -> N 1 x E E) xs
+      pares [] = []
+      pares [x] = [x]
+      pares (x:y:hs) = merge x y : pares hs
+      g [h] = h
+      g hs = g (pares hs)
+  in g ys
